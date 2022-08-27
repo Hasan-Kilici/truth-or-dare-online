@@ -1,0 +1,145 @@
+<head>
+<title>Doğruluk mu cesaret mi?</title>
+<link href="https://pro.fontawesome.com/releases/v5.13.1/css/all.css" rel="stylesheet"> 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<nav class="navbar navbar-expand-sm navbar-dark" style="background-color:#111214">
+  <div class="container-fluid ">
+    <a class="navbar-brand" href="/">Doğruluk Cesaret</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="collapsibleNavbar">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+        <a class="nav-link" href="/">Anasayfa</a>
+        </li>
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container"><br>
+<div class="row">
+ <div class="col-md-7 questionBox">
+   <h3 style="width:100%" id="question"></h3>
+    <button class="btn btn-dark" onclick="Dogruluk()">Doğruluk</button>
+    <button class="btn btn-dark" onclick="Cesaret()">Cesaret</button> 
+  </div>
+   <div class="col-md-5">
+<h4>Chat</h4>
+<ul id="messages"></ul>
+    <form id="form" action="">
+      <input class="form-control w-75" style="float:left; margin-right:1vw;margin-top:2vh" id="input" autocomplete="off" /><button class="btn btn-dark" style="width:10%;margin-top:2vh;">Send</button>
+    </form>
+</div>
+    <% if(room.roomAdminToken == user.token ){ %>
+  <div class="col-md-12">
+    <h4>Aktif kullanıcılar</h4>
+     <hr>
+    <ul id="userList">
+      
+    </ul>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modals">
+     <i class="fad fa-user-plus"></i> Arkadaşlarını davet et
+    </button><br><br>
+</div>
+
+<form method="POST" action="/delete/room/<%= room._id %>">
+<div class="col-12">
+</div>
+<input type="submit" class="btn btn-danger " value="Odayı Kapat">
+</form>
+ <% } %>
+</div>
+<div class="modal" id="modals">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Linki Kopyala</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-control" id="link">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<style>
+  .questionBox{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:1vw;
+    height:70vh;
+  }  
+</style>
+<script>
+let socket = io();
+let users = [];
+let text = document.getElementById("question");
+  
+  var messages = document.getElementById('messages');
+  var form = document.getElementById('form');
+  var input = document.getElementById('input');
+  
+window.onload = ()=>{
+socket.emit('join', "<%= roomId %>", "<%= user.username %>");
+document.getElementById("link").value = window.location.href
+}  
+
+socket.on('join room', (username, roomId)=>{
+ users.push(username)
+    var item = document.createElement('li');
+    item.textContent = `${username} Odaya katıldı!`;
+    messages.appendChild(item);
+})
+  
+function Dogruluk(){
+socket.emit("new Question Truth");
+}
+  
+function Cesaret(){
+socket.emit("new Question Dare");
+}
+  
+socket.on("get Question Truth",(data, username)=>{
+text.innerHTML = `${data}<br>(Doğruluk)`
+})
+socket.on("get Question Dare", (data, username)=>{
+text.innerHTML = `${data}<br>(Cesaret)`
+})
+  
+setInterval(()=>{
+ document.getElementById("userList").innerHTML = ""
+  for(let i = 0;i < users.length; i++){
+    document.getElementById("userList").innerHTML += `<li>${users[i]}</li>`
+   }
+  },1000)
+
+   form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit('send', input.value);
+      input.value = '';
+    }
+  });
+  
+  socket.on('recieve', function(msg) {
+    var item = document.createElement('li');
+    item.textContent = msg;
+    messages.appendChild(item);
+  });
+  
+</script>
