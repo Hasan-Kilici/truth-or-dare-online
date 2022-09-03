@@ -157,7 +157,7 @@ io.on("connection", (socket) => {
     io.in(rooms[socket.id]).emit("recieve", `${usernames[socket.id]} : ${msg}`);
   });
   socket.on("join room", (data) => {
-    socket.emit("join room");
+    socket.emit("join room", data);
   });
   socket.on("recieve", function (message) {
     socket.emit("recieve", message);
